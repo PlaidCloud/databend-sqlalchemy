@@ -269,13 +269,21 @@ class DatabendDialect(default.DefaultDialect):
         return connection.execute(text("DESC {}".format(full_table))).fetchall()
 
     def has_table(self, connection, table_name, schema=None, **kw):
-        full_table = table_name
+        query = """
+            select 1
+            from information_schema.columns
+            where table_name = '{table_name}'
+        """.format(
+            table_name=table_name
+        )
+
         if schema:
-            full_table = schema + "." + table_name
-        for r in connection.execute(text("EXISTS TABLE {}".format(full_table))):
-            if r[0] == 1:
-                return True
-        return False
+            query = "{query} and table_schema = '{schema}'".format(
+                query=query, schema=schema
+            )
+
+        result = connection.execute(text(query))
+        return bool(result.first())
 
     @reflection.cache
     def get_columns(self, connection, table_name, schema=None, **kw):
