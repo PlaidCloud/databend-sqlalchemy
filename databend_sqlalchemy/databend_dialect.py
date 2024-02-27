@@ -193,9 +193,9 @@ class DatabendTypeCompiler(compiler.GenericTypeCompiler):
 
     def visit_NUMERIC(self, type_, **kw):
         if type_.precision is None:
-            type_.precision = 38
+            return self.visit_DECIMAL(DECIMAL(38, 10), **kw)
         if type_.scale is None:
-            type._scale = 10
+            return self.visit_DECIMAL(DECIMAL(38, 10), **kw)
         return self.visit_DECIMAL(type_, **kw)
 
     def visit_NVARCHAR(self, type_, **kw):
