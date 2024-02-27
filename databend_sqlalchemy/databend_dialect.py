@@ -191,6 +191,13 @@ class DatabendTypeCompiler(compiler.GenericTypeCompiler):
     def Visit_MAP(self, type, **kw):
         return "Map(%s)" % type
 
+    def visit_NUMERIC(self, type_, **kw):
+        if type_.precision is None:
+            type_.precision = 38
+        if type_.scale is None:
+            type._scale = 10
+        return self.visit_DECIMAL(type_, **kw)
+
 
 class DatabendDialect(default.DefaultDialect):
     name = "databend"
