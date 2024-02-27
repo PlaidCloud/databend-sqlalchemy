@@ -198,6 +198,9 @@ class DatabendTypeCompiler(compiler.GenericTypeCompiler):
             type._scale = 10
         return self.visit_DECIMAL(type_, **kw)
 
+    def visit_NVARCHAR(self, type_, **kw):
+        return self.visit_VARCHAR(type_, **kw)
+
 
 class DatabendDialect(default.DefaultDialect):
     name = "databend"
