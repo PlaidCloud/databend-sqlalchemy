@@ -179,6 +179,8 @@ class Cursor(object):
         self._uuid = uuid.uuid1()
 
         if is_response:
+            if parameters:
+                operation = operation % parameters
             rows = self._db.query_iter(operation)
             schema = rows.schema()
             columns = []

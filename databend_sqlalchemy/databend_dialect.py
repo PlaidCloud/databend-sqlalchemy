@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from sqlalchemy import exc as sa_exc
 from sqlalchemy import util as sa_util
 from sqlalchemy.engine import default, reflection
-from sqlalchemy.sql import compiler, expression, text
+from sqlalchemy.sql import compiler, expression, text, literal
 from sqlalchemy.sql.elements import quoted_name
 from sqlalchemy.dialects.postgresql.base import PGCompiler, PGIdentifierPreparer
 from sqlalchemy.types import (
@@ -164,14 +164,13 @@ class DatabendCompiler(PGCompiler):
     def limit_clause(self, select, **kw):
         text = ""
         if select._limit_clause is not None:
-            text += "\n LIMIT " + self.process(select._limit_clause, **kw)
+            text += " \n LIMIT " + self.process(select._limit_clause, **kw)
         if select._offset_clause is not None:
-            text = "\n LIMIT "
             if select._limit_clause is None:
-                text += self.process(sql.literal(-1))
-            else:
-                text += "0"
-            text += "," + self.process(select._offset_clause, **kw)
+                text += "\n LIMIT -1"
+            # else:
+            #     text += "0"
+            text += " OFFSET " + self.process(select._offset_clause, **kw)
         return text
 
     def for_update_clause(self, select, **kw):
