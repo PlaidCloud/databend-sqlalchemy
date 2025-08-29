@@ -1182,6 +1182,9 @@ class DatabendCompiler(PGCompiler):
             return f"@{stage.name}/{stage.path}"
         return f"@{stage.name}"
 
+    def visit_sequence(self, seq, **kw):
+        return "nextval(%s)" % self.preparer.format_sequence(seq)  # overriden so as not to quote the sequence
+
 
 class DatabendExecutionContext(default.DefaultExecutionContext):
     iscopyintotable = False
