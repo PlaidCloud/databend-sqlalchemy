@@ -1,3 +1,4 @@
+import datetime
 import os
 from unittest import mock
 
@@ -216,6 +217,28 @@ def test_types():
     assert issubclass(
         databend_sqlalchemy.databend_dialect.ARRAY, sqlalchemy.types.TypeEngine
     )
+
+
+def test_datetime_result_processor_strips_timezone():
+    # The Databend driver returns tz-aware (UTC) datetimes; a plain
+    # DateTime()/TIMESTAMP column (timezone=False) must yield naive values so
+    # the SQLAlchemy compliance suite's naive round-trips hold.
+    DatabendDateTime = databend_sqlalchemy.databend_dialect.DatabendDateTime
+    aware = datetime.datetime(2012, 10, 15, 12, 57, 18, 396, tzinfo=datetime.timezone.utc)
+    naive = datetime.datetime(2012, 10, 15, 12, 57, 18, 396)
+
+    process = DatabendDateTime().result_processor(None, None)
+    assert process(aware) == naive
+    assert process(aware).tzinfo is None
+    # naive passes through unchanged; None is preserved; strings still parse
+    assert process(naive) == naive
+    assert process(None) is None
+    assert process("2012-10-15 12:57:18.000396") == naive
+
+    # timezone=True columns keep their tzinfo
+    process_tz = DatabendDateTime(timezone=True).result_processor(None, None)
+    assert process_tz(aware) == aware
+    assert process_tz(aware).tzinfo is not None
 
 
 def test_extract_nullable_string():
