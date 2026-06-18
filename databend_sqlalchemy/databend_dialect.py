@@ -735,8 +735,13 @@ class DatabendDateTime(sqltypes.DATETIME):
                         "could not parse %r as a datetime value" % (value,)
                     )
                 return datetime.datetime(*[int(x or 0) for x in m.groups()])
-            else:
-                return value
+            if value is not None and value.tzinfo is not None and not self.timezone:
+                # Newer Databend drivers return tz-aware (UTC) datetimes, but a
+                # plain DateTime()/TIMESTAMP column (timezone=False) must yield
+                # naive values to honour SQLAlchemy's typing contract. Normalise
+                # to UTC and drop the tzinfo; timezone=True columns stay aware.
+                return value.astimezone(datetime.timezone.utc).replace(tzinfo=None)
+            return value
 
         return process
 
